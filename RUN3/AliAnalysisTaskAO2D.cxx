@@ -106,8 +106,19 @@ void AliAnalysisTaskAO2D::UserExecAO2D()
 
    auto event = ih->CurrentEvent();
    auto tracks = ih->GetTracks();
-   int id = 0;
-   printf("Current event %lu: %lld tracks\n", ih->GetCurrentEntry(), tracks.size());
+   auto centralityObj = ih->GetCentrality();
+   //int id = 0;
+   printf("Current event %lld: %lu tracks\n", ih->GetCurrentEntry(), tracks.size());
+   if (centralityObj) {
+     double centrality = centralityObj->GetCentralityPercentile("TRK");
+     printf("  == centrality percentile TRK: %g\n", centrality);
+   }
+
+   auto mul = ih->GetMultiplicity();
+   if (mul) {
+      printf("  == multiplicity ntracklets=%d  ITSClusters(2)=%d  ITSClusters(3)=%d\n",
+         mul->GetNumberOfTracklets(), mul->GetNumberOfITSClusters(2), mul->GetNumberOfITSClusters(3));
+   }
 
    //printf("  %d: %d %g\n", id++, tracks[0].fCollisionsID, tracks[0].fX);
    for (const auto &track : tracks) {

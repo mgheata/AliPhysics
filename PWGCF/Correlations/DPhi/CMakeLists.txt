@@ -31,6 +31,7 @@ include_directories(${ROOT_INCLUDE_DIRS}
                     ${AliPhysics_SOURCE_DIR}/OADB
                     ${AliPhysics_SOURCE_DIR}/OADB/COMMON/MULTIPLICITY
                     ${AliPhysics_SOURCE_DIR}/PWGLF/FORWARD/analysis2
+                    ${AliPhysics_SOURCE_DIR}/RUN3
 		    ${AliPhysics_SOURCE_DIR}/EVENTMIX
   )
 
@@ -55,6 +56,7 @@ set(SRCS
     AliAnalysisTaskLongFluctuations2PC.cxx
     AliAnalysisTaskMinijet.cxx
     AliAnalysisTaskMinijetV2.cxx
+    AliAnalysisTaskMinijetV3.cxx
     AliAnalysisTaskPhiCorrelations.cxx
     AliAnalysisTaskCorrelationsDev.cxx
     AliAnalysisTaskpxpx.cxx
@@ -120,7 +122,7 @@ get_directory_property(incdirs INCLUDE_DIRECTORIES)
 generate_dictionary("${MODULE}" "${MODULE}LinkDef.h" "${HDRS}" "${incdirs}")
 
 set(ROOT_DEPENDENCIES)
-set(ALIROOT_DEPENDENCIES ANALYSISalice CORRFW PWGmuon PWGCFCorrelationsBase PWGJETFW OADB PWGDevNanoAOD EventMixing)
+set(ALIROOT_DEPENDENCIES ANALYSISalice CORRFW PWGmuon PWGCFCorrelationsBase PWGJETFW OADB PWGDevNanoAOD EventMixing RUN3)
 
 # Generate the ROOT map
 # Dependecies

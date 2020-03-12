@@ -5,52 +5,64 @@
 #ifndef AliAO2Dtypes_H
 #define AliAO2Dtypes_H
 
+#include <Rtypes.h>
+#include <TString.h>
+
 namespace AliAO2DTypes {
 
 enum TreeIndex { // Index of the output trees
-  kEvents = 0,  // O2events
-  kTracks,      // O2tracks
-  kCalo,        // O2calo
-  kCaloTrigger, // O2caloTrigger
-  kMuon,        // O2muon
-  kMuonCls,     // O2muoncls
-  kZdc,         // O2zdc
-  kVzero,       // O2vzero
-  kV0s,         // O2v0s
-  kCascades,    // O2cascades
-  kTOF,         // O2tof
-  kKinematics,  // O2kine
-  kTrees
+   kEvents = 0,
+   kTracks,
+   kCalo,
+   kCaloTrigger,
+   kMuon,
+   kMuonCls,
+   kZdc,
+   kVzero,
+   kV0s,
+   kCascades,
+   kTOF,
+   kKinematics,
+   kMCvtx,
+   kRange,
+   kLabels,
+   kCentrality,
+   kMultiplicity,
+   kTrees
 };
 
-struct Vertex_t {
-    // Start indices and numbers of elements for data in the other trees matching this vertex.
-    // Needed for random access of collision-related data, allowing skipping data discarded by the user
-    Int_t     fStart[kTrees]    = {0}; /// Start entry indices for data in the other trees matching this vertex
-    Int_t     fNentries[kTrees] = {0}; /// Numbers of entries for data in the other trees matching this vertex
-    // Event data
-    Int_t     fRunNumber;       /// Run Number (added in case of multirun skimming)
-    ULong64_t fEventId = 0u;    /// Event (collision) unique id. Contains period, orbit and bunch crossing numbers
-    // Primary vertex position
-    Float_t  fX = -999.f;       /// Primary vertex x coordinate
-    Float_t  fY = -999.f;       /// Primary vertex y coordinate
-    Float_t  fZ = -999.f;       /// Primary vertex z coordinate
-    // Primary vertex covariance matrix
-    Float_t  fCovXX = 999.f;    /// cov[0]
-    Float_t  fCovXY = 0.f;      /// cov[1]
-    Float_t  fCovXZ = 0.f;      /// cov[2]
-    Float_t  fCovYY = 999.f;    /// cov[3]
-    Float_t  fCovYZ = 0.f;      /// cov[4]
-    Float_t  fCovZZ = 999.f;    /// cov[5]
-    // Quality parameters
-    Float_t  fChi2;             /// Chi2 of the vertex
-    UInt_t   fN;                /// Number of contributors
+const TString kTreeName[kTrees] = { "O2events", "O2tracks", "O2calo",  "O2caloTrigger", "O2muon", "O2muoncls",
+                                    "O2zdc", "O2vzero", "O2v0s", "O2cascades", "O2tof", "O2kine", "O2mcvtx",
+                                    "O2range", "O2labels", "O2centrality", "O2multiplicity" };
 
-    // The calculation of event time certainly will be modified in Run3
-    // The prototype below can be switched on request
-    Float_t fEventTime = -999.f;    /// Event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
-    Float_t fEventTimeRes = -999.f; /// Resolution on the event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
-    UChar_t fEventTimeMask = 0u;    /// Mask with the method used to compute the event time (0x1=T0-TOF,0x2=T0A,0x3=TOC) for each momentum bins  
+struct Vertex_t {
+   // Start indices and numbers of elements for data in the other trees matching this vertex.
+   // Needed for random access of collision-related data, allowing skipping data discarded by the user
+   Int_t     fStart[kTrees]    = {0}; /// Start entry indices for data in the other trees matching this vertex
+   Int_t     fNentries[kTrees] = {0}; /// Numbers of entries for data in the other trees matching this vertex
+   // Event data
+   Int_t     fRunNumber;       /// Run Number (added in case of multirun skimming)
+   ULong64_t fEventId = 0u;    /// Event (collision) unique id. Contains period, orbit and bunch crossing numbers
+   // Primary vertex position
+   Float_t  fX = -999.f;       /// Primary vertex x coordinate
+   Float_t  fY = -999.f;       /// Primary vertex y coordinate
+   Float_t  fZ = -999.f;       /// Primary vertex z coordinate
+   // Primary vertex covariance matrix
+   Float_t  fCovXX = 999.f;    /// cov[0]
+   Float_t  fCovXY = 0.f;      /// cov[1]
+   Float_t  fCovXZ = 0.f;      /// cov[2]
+   Float_t  fCovYY = 999.f;    /// cov[3]
+   Float_t  fCovYZ = 0.f;      /// cov[4]
+   Float_t  fCovZZ = 999.f;    /// cov[5]
+   // Quality parameters
+   Float_t  fChi2;             /// Chi2 of the vertex
+   UInt_t   fN;                /// Number of contributors
+
+   // The calculation of event time certainly will be modified in Run3
+   // The prototype below can be switched on request
+   Float_t fEventTime = -999.f;    /// Event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
+   Float_t fEventTimeRes = -999.f; /// Resolution on the event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
+   UChar_t fEventTimeMask = 0u;    /// Mask with the method used to compute the event time (0x1=T0-TOF,0x2=T0A,0x3=TOC) for each momentum bins  
 };
 
 using Event_t = Vertex_t;
@@ -276,6 +288,94 @@ struct Cascade_t {
   Int_t fV0sID;                 // V0 ID
   Int_t fTracksID;              // Bachelor track ID
 };                              // structure to keep cascades information
+
+struct Centrality_t {
+ /// Centrality
+  Int_t   fQuality; // Quality of centrality determination
+  Float_t fCentralityV0M;   // Centrality from V0A+V0C
+  Float_t fCentralityV0A;   // Centrality from V0A
+  Float_t fCentralityV0A0;  // Centrality from V0A0
+  Float_t fCentralityV0A123;// Centrality from V0A123
+  Float_t fCentralityV0C;   // Centrality from V0C
+  Float_t fCentralityV0A23; // Centrality from V0A23
+  Float_t fCentralityV0C01; // Centrality from V0C01
+  Float_t fCentralityV0S;   // Centrality from V0S
+  Float_t fCentralityV0MEq; // Centrality from V0A+V0C equalized channel
+  Float_t fCentralityV0AEq; // Centrality from V0A equalized channel
+  Float_t fCentralityV0CEq; // Centrality from V0C equalized channel
+  Float_t fCentralityFMD;   // Centrality from FMD
+  Float_t fCentralityTRK;   // Centrality from tracks
+  Float_t fCentralityTKL;   // Centrality from tracklets
+  Float_t fCentralityCL0;   // Centrality from Clusters in layer 0
+  Float_t fCentralityCL1;   // Centrality from Clusters in layer 1
+  Float_t fCentralityCND;   // Centrality from tracks (candle condition)
+  Float_t fCentralityZNA;   // Centrality from ZNA
+  Float_t fCentralityZNC;   // Centrality from ZNC
+  Float_t fCentralityZPA;   // Centrality from ZPA
+  Float_t fCentralityZPC;   // Centrality from ZPC
+  Float_t fCentralityNPA;   // Centrality from Npart (MC)
+  Float_t fCentralityV0MvsFMD;   // Centrality from V0 vs FMD
+  Float_t fCentralityTKLvsV0M;   // Centrality from tracklets vs V0
+  Float_t fCentralityZEMvsZDC;   // Centrality from ZEM vs ZDC
+
+  Float_t fCentralityV0Mtrue;   // Centrality from true (sim) V0A+V0C
+  Float_t fCentralityV0Atrue;   // Centrality from true (sim) V0A
+  Float_t fCentralityV0Ctrue;   // Centrality from true (sim) V0C
+  Float_t fCentralityV0MEqtrue; // Centrality from true (sim) V0A+V0C equalized channels
+  Float_t fCentralityV0AEqtrue; // Centrality from true (sim) V0A equalized channels
+  Float_t fCentralityV0CEqtrue; // Centrality from true (sim) V0C equalized channels
+  Float_t fCentralityFMDtrue;   // Centrality from true (sim) FMD
+  Float_t fCentralityTRKtrue;   // Centrality from true (sim) tracks
+  Float_t fCentralityTKLtrue;   // Centrality from true (sim) tracklets
+  Float_t fCentralityCL0true;   // Centrality from true (sim) Clusters in layer 0
+  Float_t fCentralityCL1true;   // Centrality from true (sim) Clusters in layer 1
+  Float_t fCentralityCNDtrue;   // Centrality from true (sim) tracks (candle condition)
+  Float_t fCentralityZNAtrue;   // Centrality from true (sim) ZNA
+  Float_t fCentralityZNCtrue;   // Centrality from true (sim) ZNC
+  Float_t fCentralityZPAtrue;   // Centrality from true (sim) ZNA
+  Float_t fCentralityZPCtrue;   // Centrality from true (sim) ZNC
+
+  Float_t GetCentralityPercentile(const char *method) const;
+  Int_t   GetCentralityClass10(const char *method) const;
+  Int_t   GetCentralityClass5(const char *method) const;
+  Bool_t  IsEventInCentralityClass(Float_t a, Float_t b, const char *method) const;
+
+  Float_t GetCentralityPercentileUnchecked(const char *method) const;
+  Int_t   GetCentralityClass10Unchecked(const char *method) const;
+  Int_t   GetCentralityClass5Unchecked(const char *method) const;
+  Bool_t  IsEventInCentralityClassUnchecked(Float_t a, Float_t b, const char *method) const;
+
+  Int_t GetQuality() const { return fQuality; }
+
+};                              // structure to keep the centrality information
+
+struct Multiplicity_t {
+  Int_t fNtracks;            // Number of tracklets
+  Int_t fNsingle;            // Number of clusters on SPD layer 1 and 2 (if storage of spd2 singles requested), not associated with a tracklet on otherSPD 
+  //
+  Float_t fDPhiWindow2;      // sigma^2 in dphi used in reco
+  Float_t fDThetaWindow2;    // sigma^2 in dtheta used in reco
+  Float_t fDPhiShift;        // bending shift used
+  Float_t fNStdDev;          // number of standard deviations kept
+  //
+  Short_t fFiredChips[2];    // Number of fired chips in the two SPD layers
+  UInt_t fITSClusters[6];    // Number of ITS cluster per layer
+  Float_t fCentroidXY[2];    // tracklets centroid in X,Y 
+
+  Int_t   GetNumberOfTracklets() const {return fNtracks;}
+  Int_t   GetNumberOfSingleClusters() const {return fNsingle;}
+  UInt_t  GetNumberOfITSClusters(Int_t layer) const { return layer<6 ? fITSClusters[layer] : 0; }
+  UInt_t  GetNumberOfSPDClusters() const {return GetNumberOfITSClusters(0) + GetNumberOfITSClusters(1);}
+
+  Short_t GetNumberOfFiredChips(Int_t layer) const { return fFiredChips[layer]; }
+  Float_t GetDPhiWindow2()                  const {return fDPhiWindow2;}
+  Float_t GetDThetaWindow2()                const {return fDThetaWindow2;}
+  Float_t GetDPhiShift()                    const {return fDPhiShift;}
+  Float_t GetNStdDev()                      const {return fNStdDev;}
+
+  Float_t GetCentroidX() const {return fCentroidXY[0];}
+  Float_t GetCentroidY() const {return fCentroidXY[1];}
+};                              // structure keeping the minimum info from AliMultiplicity
 
 } // namespace AliAO2DTypes
 #endif

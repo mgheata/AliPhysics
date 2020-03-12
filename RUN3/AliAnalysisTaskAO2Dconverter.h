@@ -54,6 +54,8 @@ public:
     kRange,
     kLabels,
     kTrigger,
+    kCentrality,
+    kMultiplicity,
     kTrees
   };
   enum TaskModes { // Flag for the task operation mode
@@ -86,10 +88,14 @@ public:
 
   void Prune(TString p) { fPruneList = p; }; // Setter of the pruning list
   void SetMCMode() { fTaskMode = kMC; };     // Setter of the MC running mode
+  void SetUseCentrality(bool flag = true) { fUseCentrality = flag; }
+  void SetUseMultiplicity(bool flag = true) { fUseMultiplicity = flag; }
 
   AliAnalysisFilter fTrackFilter; // Standard track filter object
 private:
   Bool_t fUseEventCuts = kFALSE;         //! Use or not event cuts
+  Bool_t fUseCentrality = kFALSE;        // Use centrality task
+  Bool_t fUseMultiplicity = kFALSE;      // Convert multiplicity from ESD
   AliEventCuts fEventCuts;      //! Standard event cuts
   AliESDEvent *fESD = nullptr;  //! input event
   TList *fOutputList = nullptr; //! output list
@@ -386,6 +392,67 @@ private:
     Int_t fV0sID; // V0 ID
     Int_t fTracksID; // Bachelor track ID
   } cascs;             //! structure to keep cascades information
+
+  struct {
+    /// Centrality
+     Int_t   fQuality; // Quality of centrality determination
+     Float_t fCentralityV0M;   // Centrality from V0A+V0C
+     Float_t fCentralityV0A;   // Centrality from V0A
+     Float_t fCentralityV0A0;  // Centrality from V0A0
+     Float_t fCentralityV0A123;// Centrality from V0A123
+     Float_t fCentralityV0C;   // Centrality from V0C
+     Float_t fCentralityV0A23; // Centrality from V0A23
+     Float_t fCentralityV0C01; // Centrality from V0C01
+     Float_t fCentralityV0S;   // Centrality from V0S
+     Float_t fCentralityV0MEq; // Centrality from V0A+V0C equalized channel
+     Float_t fCentralityV0AEq; // Centrality from V0A equalized channel
+     Float_t fCentralityV0CEq; // Centrality from V0C equalized channel
+     Float_t fCentralityFMD;   // Centrality from FMD
+     Float_t fCentralityTRK;   // Centrality from tracks
+     Float_t fCentralityTKL;   // Centrality from tracklets
+     Float_t fCentralityCL0;   // Centrality from Clusters in layer 0
+     Float_t fCentralityCL1;   // Centrality from Clusters in layer 1
+     Float_t fCentralityCND;   // Centrality from tracks (candle condition)
+     Float_t fCentralityZNA;   // Centrality from ZNA
+     Float_t fCentralityZNC;   // Centrality from ZNC
+     Float_t fCentralityZPA;   // Centrality from ZPA
+     Float_t fCentralityZPC;   // Centrality from ZPC
+     Float_t fCentralityNPA;   // Centrality from Npart (MC)
+     Float_t fCentralityV0MvsFMD;   // Centrality from V0 vs FMD
+     Float_t fCentralityTKLvsV0M;   // Centrality from tracklets vs V0
+     Float_t fCentralityZEMvsZDC;   // Centrality from ZEM vs ZDC
+
+     Float_t fCentralityV0Mtrue;   // Centrality from true (sim) V0A+V0C
+     Float_t fCentralityV0Atrue;   // Centrality from true (sim) V0A
+     Float_t fCentralityV0Ctrue;   // Centrality from true (sim) V0C
+     Float_t fCentralityV0MEqtrue; // Centrality from true (sim) V0A+V0C equalized channels
+     Float_t fCentralityV0AEqtrue; // Centrality from true (sim) V0A equalized channels
+     Float_t fCentralityV0CEqtrue; // Centrality from true (sim) V0C equalized channels
+     Float_t fCentralityFMDtrue;   // Centrality from true (sim) FMD
+     Float_t fCentralityTRKtrue;   // Centrality from true (sim) tracks
+     Float_t fCentralityTKLtrue;   // Centrality from true (sim) tracklets
+     Float_t fCentralityCL0true;   // Centrality from true (sim) Clusters in layer 0
+     Float_t fCentralityCL1true;   // Centrality from true (sim) Clusters in layer 1
+     Float_t fCentralityCNDtrue;   // Centrality from true (sim) tracks (candle condition)
+     Float_t fCentralityZNAtrue;   // Centrality from true (sim) ZNA
+     Float_t fCentralityZNCtrue;   // Centrality from true (sim) ZNC
+     Float_t fCentralityZPAtrue;   // Centrality from true (sim) ZNA
+     Float_t fCentralityZPCtrue;   // Centrality from true (sim) ZNC
+  } centr;        //! structure to keep centrality data
+
+  struct {
+     Int_t fNtracks;            // Number of tracklets
+     Int_t fNsingle;            // Number of clusters on SPD layer 1 and 2 (if storage of spd2 singles requested), not associated with a tracklet on otherSPD 
+     //
+     Float_t fDPhiWindow2;      // sigma^2 in dphi used in reco
+     Float_t fDThetaWindow2;    // sigma^2 in dtheta used in reco
+     Float_t fDPhiShift;        // bending shift used
+     Float_t fNStdDev;          // number of standard deviations kept
+     //
+     Short_t fFiredChips[2];    // Number of fired chips in the two SPD layers
+     UInt_t fITSClusters[6];    // Number of ITS cluster per layer
+     Float_t fCentroidXY[2];    // tracklets centroid in X,Y 
+  } mult;         //! structure to keep multiplicity data
 
   /// Offsets to convert the IDs within one collision to global IDs
   Int_t fOffsetMuTrackID = 0; ///! Offset of MUON track IDs (used in the clusters)

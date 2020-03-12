@@ -3,13 +3,14 @@ R__ADD_INCLUDE_PATH($ALICE_PHYSICS)
 #include <ANALYSIS/macros/train/AddESDHandler.C>
 #include <OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C>
 #include <OADB/macros/AddTaskPhysicsSelection.C>
+#include <OADB/macros/AddTaskCentrality.C>
 #include <ANALYSIS/macros/AddTaskPIDResponse.C>
 #include <RUN3/AddTaskAO2Dconverter.C>
 
 TChain* CreateChain(const char *xmlfile, const char *type="ESD");
 TChain *CreateLocalChain(const char *txtfile, const char *type, int nfiles);
 
-void convertAO2D()
+void convertAO2D(bool use_centrality=false)
 {
    const char *anatype = "ESD";
 
@@ -29,9 +30,12 @@ void convertAO2D()
    AddTaskMultSelection();
    AddTaskPhysicsSelection();
    AddTaskPIDResponse();
+   if (use_centrality)
+     AddTaskCentrality(false, false); // do not fill histograms, use ESD
 
    AliAnalysisTaskAO2Dconverter* converter = AddTaskAO2Dconverter("");
    //converter->SelectCollisionCandidates(AliVEvent::kAny);
+   converter->SetUseCentrality(use_centrality);
    
    if (!mgr->InitAnalysis()) return;
    //PH   mgr->SetBit(AliAnalysisManager::kTrueNotify);

@@ -33,10 +33,22 @@ public:
     Long64_t             GetCurrentEntry() const { return fEntry; }
     Long64_t             GetFileEntry() const { return fFileEntry; }
     // Get the statistics object (currently TH2). Option can be BIN0.
-    virtual TObject     *GetStatistics(Option_t *option="") const {return nullptr;}
+    virtual TObject     *GetStatistics(Option_t *option="") const { return nullptr; }
 
-    AliAO2DTypes::Event_t const &CurrentEvent() const {return fEvent;}
-    AliAO2DTypes::MCvtx_t const &CurrentMCEvent()  const {return fMCEvent;}
+    AliAO2DTypes::Event_t const &CurrentEvent() const { return fEvent; }
+    AliAO2DTypes::MCvtx_t const &CurrentMCEvent()  const { return fMCEvent; }
+    AliAO2DTypes::Centrality_t const *GetCentrality()
+    {
+      if (!fHasCentrality) return nullptr;
+      if (!fReadTree[AliAO2DTypes::kCentrality]) ReadCentrality();
+      return &fCentrality;
+    }
+    AliAO2DTypes::Multiplicity_t const *GetMultiplicity()
+    {
+      if (!fHasMultiplicity) return nullptr;
+      if (!fReadTree[AliAO2DTypes::kMultiplicity]) ReadMultiplicity();
+      return &fMultiplicity;
+    }
 
     std::vector<AliAO2DTypes::Track_t> const &GetTracks()
     {
@@ -56,6 +68,8 @@ public:
 
     void ConnectEventTree(TTree *tree) const;
     void ConnectTracksTree(TTree *tree) const;
+    void ConnectCentralityTree(TTree *tree) const;
+    void ConnectMultiplicityTree(TTree *tree) const;
     /// \brief Functions reading on demand different arrays
     void ReadTracks();
     void ReadMCtracks();
@@ -66,6 +80,8 @@ public:
     void ReadMUONclusters();
     void ReadV0s();
     void ReadCascades();
+    void ReadCentrality();
+    void ReadMultiplicity();
 
    private:
     std::array<TTree*, AliAO2DTypes::kTrees> fTrees;        //!<! Array of trees in the AO2D file
@@ -104,9 +120,15 @@ public:
     AliAO2DTypes::Cascade_t fCascade;                       //!<! Cascade connected to the tree
     std::vector<AliAO2DTypes::Cascade_t> fCascades;         //!<! Cascades
 
+    AliAO2DTypes::Centrality_t fCentrality;                 //!<! Centrality object
+
+    AliAO2DTypes::Multiplicity_t fMultiplicity;             //!<! Multiplicity object
+
     Long64_t fEntry = -1;                                   //!<! Current read entry
     Long64_t fFileEntry = -1;                               //!<! Current read entry in the current file
     bool fUseMC = false;                                    //!<! Use MC
+    bool fHasCentrality = false;                            //!<! Centrality is available
+    bool fHasMultiplicity = false;                          //!<! Multiplicity is available
 
     ClassDef(AliAO2DInputHandler, 1);
 };

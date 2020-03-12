@@ -62,7 +62,6 @@ Bool_t AliAO2DInputHandler::Init(TTree* tree, Option_t* opt)
   fTree = tree;
   if (!fTree) return kFALSE;
   fTree->GetEntries();
-  const char *treeName[AliAO2DTypes::kTrees] = { "O2events", "O2tracks", "O2calo",  "O2caloTrigger", "O2muon", "O2muoncls", "O2zdc", "O2vzero", "O2v0s", "O2cascades", "O2tof", "O2kine" };
   TTree *ttree = fTree->GetTree();
   if (!ttree) ttree = fTree; // is this ok?
   TString filename(ttree->GetCurrentFile()->GetName());
@@ -70,10 +69,21 @@ Bool_t AliAO2DInputHandler::Init(TTree* tree, Option_t* opt)
   fTrees[0] = ttree;
   fFileEntry = -1;
   for (int i = 1; i < AliAO2DTypes::kTrees; ++i)
-    fTrees[i] = (TTree*)dir->Get(treeName[i]);
+    fTrees[i] = (TTree*)dir->Get(AliAO2DTypes::kTreeName[i]);
 
-  ConnectEventTree(fTrees[0]);
-  ConnectTracksTree(fTrees[1]);
+  ConnectEventTree(fTrees[AliAO2DTypes::kEvents]);
+  assert(fTrees[AliAO2DTypes::kTracks]);
+  ConnectTracksTree(fTrees[AliAO2DTypes::kTracks]);
+  // Check if centrality tree exists
+  if (fTrees[AliAO2DTypes::kCentrality]) {
+    fHasCentrality = true;
+    ConnectCentralityTree(fTrees[AliAO2DTypes::kCentrality]);
+  }
+  // Check if multiplicity tree exists
+  if (fTrees[AliAO2DTypes::kMultiplicity]) {
+    fHasMultiplicity = true;
+    ConnectMultiplicityTree(fTrees[AliAO2DTypes::kMultiplicity]);
+  }
     
   // Connect all trees with local objects
     
@@ -225,6 +235,122 @@ void AliAO2DInputHandler::ConnectTracksTree(TTree *tree) const
 }
 
 //______________________________________________________________________________
+void AliAO2DInputHandler::ConnectCentralityTree(TTree *tree) const
+{
+  TBranch *br;
+  // Connect trees with local objects
+  br = tree->GetBranch("fQuality");
+  br->SetAddress((void*)&fCentrality.fQuality);
+  br = tree->GetBranch("fCentralityV0M");
+  br->SetAddress((void*)&fCentrality.fCentralityV0M);
+  br = tree->GetBranch("fCentralityV0A");
+  br->SetAddress((void*)&fCentrality.fCentralityV0A);
+  br = tree->GetBranch("fCentralityV0A0");
+  br->SetAddress((void*)&fCentrality.fCentralityV0A0);
+  br = tree->GetBranch("fCentralityV0A123");
+  br->SetAddress((void*)&fCentrality.fCentralityV0A123);
+  br = tree->GetBranch("fCentralityV0C");
+  br->SetAddress((void*)&fCentrality.fCentralityV0C);
+  br = tree->GetBranch("fCentralityV0A23");
+  br->SetAddress((void*)&fCentrality.fCentralityV0A23);
+  br = tree->GetBranch("fCentralityV0C01");
+  br->SetAddress((void*)&fCentrality.fCentralityV0C01);
+  br = tree->GetBranch("fCentralityV0S");
+  br->SetAddress((void*)&fCentrality.fCentralityV0S);
+  br = tree->GetBranch("fCentralityV0MEq");
+  br->SetAddress((void*)&fCentrality.fCentralityV0MEq);
+  br = tree->GetBranch("fCentralityV0AEq");
+  br->SetAddress((void*)&fCentrality.fCentralityV0AEq);
+  br = tree->GetBranch("fCentralityV0CEq");
+  br->SetAddress((void*)&fCentrality.fCentralityV0CEq);
+  br = tree->GetBranch("fCentralityFMD");
+  br->SetAddress((void*)&fCentrality.fCentralityFMD);
+  br = tree->GetBranch("fCentralityTRK");
+  br->SetAddress((void*)&fCentrality.fCentralityTRK);
+  br = tree->GetBranch("fCentralityTKL");
+  br->SetAddress((void*)&fCentrality.fCentralityTKL);
+  br = tree->GetBranch("fCentralityCL0");
+  br->SetAddress((void*)&fCentrality.fCentralityCL0);
+  br = tree->GetBranch("fCentralityCL1");
+  br->SetAddress((void*)&fCentrality.fCentralityCL1);
+  br = tree->GetBranch("fCentralityCND");
+  br->SetAddress((void*)&fCentrality.fCentralityCND);
+  br = tree->GetBranch("fCentralityZNA");
+  br->SetAddress((void*)&fCentrality.fCentralityZNA);
+  br = tree->GetBranch("fCentralityZNC");
+  br->SetAddress((void*)&fCentrality.fCentralityZNC);
+  br = tree->GetBranch("fCentralityZPA");
+  br->SetAddress((void*)&fCentrality.fCentralityZPA);
+  br = tree->GetBranch("fCentralityZPC");
+  br->SetAddress((void*)&fCentrality.fCentralityZPC);
+  br = tree->GetBranch("fCentralityNPA");
+  br->SetAddress((void*)&fCentrality.fCentralityNPA);
+  br = tree->GetBranch("fCentralityV0MvsFMD");
+  br->SetAddress((void*)&fCentrality.fCentralityV0MvsFMD);
+  br = tree->GetBranch("fCentralityTKLvsV0M");
+  br->SetAddress((void*)&fCentrality.fCentralityTKLvsV0M);
+  br = tree->GetBranch("fCentralityZEMvsZDC");
+  br->SetAddress((void*)&fCentrality.fCentralityZEMvsZDC);
+  br = tree->GetBranch("fCentralityV0Mtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityV0Mtrue);
+  br = tree->GetBranch("fCentralityV0Atrue");
+  br->SetAddress((void*)&fCentrality.fCentralityV0Atrue);
+  br = tree->GetBranch("fCentralityV0Ctrue");
+  br->SetAddress((void*)&fCentrality.fCentralityV0Ctrue);
+  br = tree->GetBranch("fCentralityV0MEqtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityV0MEqtrue);
+  br = tree->GetBranch("fCentralityV0AEqtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityV0AEqtrue);
+  br = tree->GetBranch("fCentralityV0CEqtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityV0CEqtrue);
+  br = tree->GetBranch("fCentralityFMDtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityFMDtrue);
+  br = tree->GetBranch("fCentralityTRKtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityTRKtrue);
+  br = tree->GetBranch("fCentralityTKLtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityTKLtrue);
+  br = tree->GetBranch("fCentralityCL0true");
+  br->SetAddress((void*)&fCentrality.fCentralityCL0true);
+  br = tree->GetBranch("fCentralityCL1true");
+  br->SetAddress((void*)&fCentrality.fCentralityCL1true);
+  br = tree->GetBranch("fCentralityCNDtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityCNDtrue);
+  br = tree->GetBranch("fCentralityZNAtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityZNAtrue);
+  br = tree->GetBranch("fCentralityZNCtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityZNCtrue);
+  br = tree->GetBranch("fCentralityZPAtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityZPAtrue);
+  br = tree->GetBranch("fCentralityZPCtrue");
+  br->SetAddress((void*)&fCentrality.fCentralityZPCtrue);
+}
+
+//______________________________________________________________________________
+void AliAO2DInputHandler::ConnectMultiplicityTree(TTree *tree) const
+{
+  TBranch *br;
+  // Connect trees with local objects
+  br = tree->GetBranch("fNtracks");
+  br->SetAddress((void*)&fMultiplicity.fNtracks);
+  br = tree->GetBranch("fNsingle");
+  br->SetAddress((void*)&fMultiplicity.fNsingle);
+  br = tree->GetBranch("fDPhiWindow2");
+  br->SetAddress((void*)&fMultiplicity.fDPhiWindow2);
+  br = tree->GetBranch("fDThetaWindow2");
+  br->SetAddress((void*)&fMultiplicity.fDThetaWindow2);
+  br = tree->GetBranch("fDPhiShift");
+  br->SetAddress((void*)&fMultiplicity.fDPhiShift);
+  br = tree->GetBranch("fNStdDev");
+  br->SetAddress((void*)&fMultiplicity.fNStdDev);
+  br = tree->GetBranch("fFiredChips");
+  br->SetAddress((void*)fMultiplicity.fFiredChips);
+  br = tree->GetBranch("fITSClusters");
+  br->SetAddress((void*)fMultiplicity.fITSClusters);
+  br = tree->GetBranch("fCentroidXY");
+  br->SetAddress((void*)fMultiplicity.fCentroidXY);
+}
+
+//______________________________________________________________________________
 void AliAO2DInputHandler::ReadTracks()
 {
   Int_t ntracks = fEvent.fNentries[AliAO2DTypes::kTracks];
@@ -236,6 +362,20 @@ void AliAO2DInputHandler::ReadTracks()
     fTracks[entry - start] = fReadTrack;
   }
   fReadTree[AliAO2DTypes::kTracks] = true;
+}
+
+//______________________________________________________________________________
+void AliAO2DInputHandler::ReadCentrality()
+{
+  Int_t start = fEvent.fStart[AliAO2DTypes::kCentrality];
+  fTrees[AliAO2DTypes::kCentrality]->GetEntry(start);
+}
+
+//______________________________________________________________________________
+void AliAO2DInputHandler::ReadMultiplicity()
+{
+  Int_t start = fEvent.fStart[AliAO2DTypes::kMultiplicity];
+  fTrees[AliAO2DTypes::kMultiplicity]->GetEntry(start);
 }
 
 void AliAO2DInputHandler::ReadMCtracks() {}

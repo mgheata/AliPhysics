@@ -44,6 +44,8 @@
 #include "AliMCEvent.h"
 #include "AliMCEventHandler.h"
 #include "AliPIDResponse.h"
+#include "AliCentrality.h"
+#include "AliMultiplicity.h"
 
 #include "AliGenCocktailEventHeader.h"
 #include "AliGenDPMjetEventHeader.h"
@@ -100,9 +102,9 @@ AliAnalysisTaskAO2Dconverter::~AliAnalysisTaskAO2Dconverter()
       delete fTree[i];
 }
 
-const TString AliAnalysisTaskAO2Dconverter::TreeName[kTrees] = { "O2collisions", "O2tracks", "O2calo",  "O2caloTrigger", "O2muon", "O2muoncls", "O2zdc", "O2vzero", "O2v0s", "O2cascades", "O2tof", "O2kine", "O2mcvtx", "O2range", "O2labels", "O2trigger" };
+const TString AliAnalysisTaskAO2Dconverter::TreeName[kTrees] = { "O2events", "O2tracks", "O2calo",  "O2caloTrigger", "O2muon", "O2muoncls", "O2zdc", "O2vzero", "O2v0s", "O2cascades", "O2tof", "O2kine", "O2mcvtx", "O2range", "O2labels", "O2trigger", "O2centrality", "O2multiplicity" };
 
-const TString AliAnalysisTaskAO2Dconverter::TreeTitle[kTrees] = { "Collision tree", "Barrel tracks", "Calorimeter cells", "Calorimeter triggers", "MUON tracks", "MUON clusters", "ZDC", "VZERO", "V0s", "Cascades", "TOF hits", "Kinematics", "MC vertex", "Range of MC labels", "MC labels", "Trigger info"};
+const TString AliAnalysisTaskAO2Dconverter::TreeTitle[kTrees] = { "Event tree", "Barrel tracks", "Calorimeter cells", "Calorimeter triggers", "MUON tracks", "MUON clusters", "ZDC", "VZERO", "V0s", "Cascades", "TOF hits", "Kinematics", "MC vertex", "Range of MC labels", "MC labels", "Trigger info", "Centrality", "Multiplicity" };
 
 const TClass* AliAnalysisTaskAO2Dconverter::Generator[kGenerators] = { AliGenEventHeader::Class(), AliGenCocktailEventHeader::Class(), AliGenDPMjetEventHeader::Class(), AliGenEpos3EventHeader::Class(), AliGenEposEventHeader::Class(), AliGenEventHeaderTunedPbPb::Class(), AliGenGeVSimEventHeader::Class(), AliGenHepMCEventHeader::Class(), AliGenHerwigEventHeader::Class(), AliGenHijingEventHeader::Class(), AliGenPythiaEventHeader::Class(), AliGenToyEventHeader::Class() };
 
@@ -411,7 +413,76 @@ void AliAnalysisTaskAO2Dconverter::UserCreateOutputObjects()
     }
     PostTree(kLabels);
   }
+ // Centrality if requested
+ if (fUseCentrality) {
+    TTree* tCentrality = CreateTree(kCentrality);
+    tCentrality->SetAutoFlush(fNumberOfEventsPerCluster);
+    if (fTreeStatus[kCentrality]) {
+      tCentrality->Branch("fQuality", &centr.fQuality, "fQuality/I");
+      tCentrality->Branch("fCentralityV0M", &centr.fCentralityV0M, "fCentralityV0M/F");
+      tCentrality->Branch("fCentralityV0A", &centr.fCentralityV0A, "fCentralityV0A/F");
+      tCentrality->Branch("fCentralityV0A0", &centr.fCentralityV0A0, "fCentralityV0A0/F");
+      tCentrality->Branch("fCentralityV0A123", &centr.fCentralityV0A123, "fCentralityV0A123/F");
+      tCentrality->Branch("fCentralityV0C", &centr.fCentralityV0C, "fCentralityV0C/F");
+      tCentrality->Branch("fCentralityV0A23", &centr.fCentralityV0A23, "fCentralityV0A23/F");
+      tCentrality->Branch("fCentralityV0C01", &centr.fCentralityV0C01, "fCentralityV0C01/F");
+      tCentrality->Branch("fCentralityV0S", &centr.fCentralityV0S, "fCentralityV0S/F");
+      tCentrality->Branch("fCentralityV0MEq", &centr.fCentralityV0MEq, "fCentralityV0MEq/F");
+      tCentrality->Branch("fCentralityV0AEq", &centr.fCentralityV0AEq, "fCentralityV0AEq/F");
+      tCentrality->Branch("fCentralityV0CEq", &centr.fCentralityV0CEq, "fCentralityV0CEq/F");
+      tCentrality->Branch("fCentralityFMD", &centr.fCentralityFMD, "fCentralityFMD/F");
+      tCentrality->Branch("fCentralityTRK", &centr.fCentralityTRK, "fCentralityTRK/F");
+      tCentrality->Branch("fCentralityTKL", &centr.fCentralityTKL, "fCentralityTKL/F");
+      tCentrality->Branch("fCentralityCL0", &centr.fCentralityCL0, "fCentralityCL0/F");
+      tCentrality->Branch("fCentralityCL1", &centr.fCentralityCL1, "fCentralityCL1/F");
+      tCentrality->Branch("fCentralityCND", &centr.fCentralityCND, "fCentralityCND/F");
+      tCentrality->Branch("fCentralityZNA", &centr.fCentralityZNA, "fCentralityZNA/F");
+      tCentrality->Branch("fCentralityZNC", &centr.fCentralityZNC, "fCentralityZNC/F");
+      tCentrality->Branch("fCentralityZPA", &centr.fCentralityZPA, "fCentralityZPA/F");
+      tCentrality->Branch("fCentralityZPC", &centr.fCentralityZPC, "fCentralityZPC/F");
+      tCentrality->Branch("fCentralityNPA", &centr.fCentralityNPA, "fCentralityNPA/F");
+      tCentrality->Branch("fCentralityV0MvsFMD", &centr.fCentralityV0MvsFMD, "fCentralityV0MvsFMD/F");
+      tCentrality->Branch("fCentralityTKLvsV0M", &centr.fCentralityTKLvsV0M, "fCentralityTKLvsV0M/F");
+      tCentrality->Branch("fCentralityZEMvsZDC", &centr.fCentralityZEMvsZDC, "fCentralityZEMvsZDC/F");
+      tCentrality->Branch("fCentralityV0Mtrue", &centr.fCentralityV0Mtrue, "fCentralityV0Mtrue/F");
+      tCentrality->Branch("fCentralityV0Atrue", &centr.fCentralityV0Atrue, "fCentralityV0Atrue/F");
+      tCentrality->Branch("fCentralityV0Ctrue", &centr.fCentralityV0Ctrue, "fCentralityV0Ctrue/F");
+      tCentrality->Branch("fCentralityV0MEqtrue", &centr.fCentralityV0MEqtrue, "fCentralityV0MEqtrue/F");
+      tCentrality->Branch("fCentralityV0AEqtrue", &centr.fCentralityV0AEqtrue, "fCentralityV0AEqtrue/F");
+      tCentrality->Branch("fCentralityV0CEqtrue", &centr.fCentralityV0CEqtrue, "fCentralityV0CEqtrue/F");
+      tCentrality->Branch("fCentralityFMDtrue", &centr.fCentralityFMDtrue, "fCentralityFMDtrue/F");
+      tCentrality->Branch("fCentralityTRKtrue", &centr.fCentralityTRKtrue, "fCentralityTRKtrue/F");
+      tCentrality->Branch("fCentralityTKLtrue", &centr.fCentralityTKLtrue, "fCentralityTKLtrue/F");
 
+      tCentrality->Branch("fCentralityCL0true", &centr.fCentralityCL0true, "fCentralityCL0true/F");
+      tCentrality->Branch("fCentralityCL1true", &centr.fCentralityCL1true, "fCentralityCL1true/F");
+      tCentrality->Branch("fCentralityCNDtrue", &centr.fCentralityCNDtrue, "fCentralityCNDtrue/F");
+      tCentrality->Branch("fCentralityZNAtrue", &centr.fCentralityZNAtrue, "fCentralityZNAtrue/F");
+      tCentrality->Branch("fCentralityZNCtrue", &centr.fCentralityZNCtrue, "fCentralityZNCtrue/F");
+      tCentrality->Branch("fCentralityZPAtrue", &centr.fCentralityZPAtrue, "fCentralityZPAtrue/F");
+      tCentrality->Branch("fCentralityZPCtrue", &centr.fCentralityZPCtrue, "fCentralityZPCtrue/F");
+    }
+    PostTree(kCentrality);
+  }
+
+ // Multiplicity if requested
+ if (fUseMultiplicity) {
+    TTree* tMultiplicity = CreateTree(kMultiplicity);
+    tMultiplicity->SetAutoFlush(fNumberOfEventsPerCluster);
+    if (fTreeStatus[kMultiplicity]) {
+      tMultiplicity->Branch("fNtracks", &mult.fNtracks, "fNtracks/I");
+      tMultiplicity->Branch("fNsingle", &mult.fNsingle, "fNsingle/I");
+      tMultiplicity->Branch("fDPhiWindow2", &mult.fDPhiWindow2, "fDPhiWindow2/F");
+      tMultiplicity->Branch("fDThetaWindow2", &mult.fDThetaWindow2, "fDThetaWindow2/F");
+      tMultiplicity->Branch("fDPhiShift", &mult.fDPhiShift, "fDPhiShift/F");
+      tMultiplicity->Branch("fNStdDev", &mult.fNStdDev, "fNStdDev/F");
+
+      tMultiplicity->Branch("fFiredChips", &mult.fFiredChips, "fFiredChips[2]/S");
+      tMultiplicity->Branch("fITSClusters", &mult.fITSClusters, "fITSClusters[6]/i");
+      tMultiplicity->Branch("fCentroidXY", &mult.fCentroidXY, "fCentroidXY[2]/F");
+    }
+    PostTree(kMultiplicity);
+  }
 
   Prune(); //Removing all unwanted branches (if any)
 }
@@ -661,6 +732,7 @@ void AliAnalysisTaskAO2Dconverter::UserExec(Option_t *)
   } // end loop on tracks
   vtx.fNentries[kTOF]    = ntofcls_filled;
   vtx.fNentries[kTracks] = ntrk_filled;
+  printf("Event %d: %d tracks\n", eventID, ntrk_filled);
 
   //---------------------------------------------------------------------------
   // Calorimeter data
@@ -835,6 +907,74 @@ void AliAnalysisTaskAO2Dconverter::UserExec(Option_t *)
   }
   FillTree(kVzero);
   if (fTreeStatus[kVzero]) vtx.fNentries[kVzero] = 1;
+
+  //---------------------------------------------------------------------------
+  // Centrality
+  if (fUseCentrality) {
+    AliCentrality *centrality = fESD->GetCentrality();
+    centr.fQuality = centrality->GetQuality();
+    centr.fCentralityV0M = centrality->GetCentralityPercentile("V0M");
+    centr.fCentralityV0A = centrality->GetCentralityPercentile("V0A");
+    centr.fCentralityV0A0 = centrality->GetCentralityPercentile("V0A0");
+    centr.fCentralityV0A123 = centrality->GetCentralityPercentile("V0A123");
+    centr.fCentralityV0C = centrality->GetCentralityPercentile("V0C");
+    centr.fCentralityV0A23 = centrality->GetCentralityPercentile("V0A23");
+    centr.fCentralityV0C01 = centrality->GetCentralityPercentile("V0C01");
+    centr.fCentralityV0S = centrality->GetCentralityPercentile("V0S");
+    centr.fCentralityV0MEq = centrality->GetCentralityPercentile("V0MEq");
+    centr.fCentralityV0AEq = centrality->GetCentralityPercentile("V0AEq");
+    centr.fCentralityV0CEq = centrality->GetCentralityPercentile("V0CEq");
+    centr.fCentralityFMD = centrality->GetCentralityPercentile("FMD");
+    centr.fCentralityTRK = centrality->GetCentralityPercentile("TRK");
+    centr.fCentralityTKL = centrality->GetCentralityPercentile("TKL");
+    centr.fCentralityCL0 = centrality->GetCentralityPercentile("CL0");
+    centr.fCentralityCL1 = centrality->GetCentralityPercentile("CL1");
+    centr.fCentralityCND = centrality->GetCentralityPercentile("CND");
+    centr.fCentralityZNA = centrality->GetCentralityPercentile("ZNA");
+    centr.fCentralityZNC = centrality->GetCentralityPercentile("ZNC");
+    centr.fCentralityZPA = centrality->GetCentralityPercentile("ZPA");
+    centr.fCentralityZPC = centrality->GetCentralityPercentile("ZPC");
+    centr.fCentralityNPA = centrality->GetCentralityPercentile("NPA");
+    centr.fCentralityV0MvsFMD = centrality->GetCentralityPercentile("V0MvsFMD");
+    centr.fCentralityTKLvsV0M = centrality->GetCentralityPercentile("TKLvsV0M");
+    centr.fCentralityZEMvsZDC = centrality->GetCentralityPercentile("ZEMvsZDC");
+    centr.fCentralityV0Mtrue = centrality->GetCentralityPercentile("V0Mtrue");
+    centr.fCentralityV0Atrue = centrality->GetCentralityPercentile("V0Atrue");
+    centr.fCentralityV0Ctrue = centrality->GetCentralityPercentile("V0Ctrue");
+    centr.fCentralityV0MEqtrue = centrality->GetCentralityPercentile("V0MEqtrue");
+    centr.fCentralityV0AEqtrue = centrality->GetCentralityPercentile("V0AEqtrue");
+    centr.fCentralityV0CEqtrue = centrality->GetCentralityPercentile("V0CEqtrue");
+    centr.fCentralityFMDtrue = centrality->GetCentralityPercentile("FMDtrue");
+    centr.fCentralityTRKtrue = centrality->GetCentralityPercentile("RKtrue");
+    centr.fCentralityTKLtrue = centrality->GetCentralityPercentile("TKLtrue");
+    centr.fCentralityCL0true = centrality->GetCentralityPercentile("CL0true");
+    centr.fCentralityCL1true = centrality->GetCentralityPercentile("CL1true");
+    centr.fCentralityCNDtrue = centrality->GetCentralityPercentile("CNDtrue");
+    centr.fCentralityZNAtrue = centrality->GetCentralityPercentile("ZNAtrue");
+    centr.fCentralityZNCtrue = centrality->GetCentralityPercentile("ZNCtrue");
+    centr.fCentralityZPAtrue = centrality->GetCentralityPercentile("ZPAtrue");
+    centr.fCentralityZPCtrue = centrality->GetCentralityPercentile("ZPCtrue");
+    FillTree(kCentrality);
+    if (fTreeStatus[kCentrality]) vtx.fNentries[kCentrality] = 1;
+  }
+
+  if (fUseMultiplicity) {
+    AliMultiplicity *esdmult = fESD->GetMultiplicity();
+    mult.fNtracks = esdmult->GetNumberOfTracklets();
+    mult.fNsingle = esdmult->GetNumberOfSingleClusters();
+    mult.fDPhiWindow2 = esdmult->GetDPhiWindow2();
+    mult.fDThetaWindow2 = esdmult->GetDThetaWindow2();
+    mult.fDPhiShift = esdmult->GetDPhiShift();
+    mult.fNStdDev = esdmult->GetNStdDev();
+    mult.fCentroidXY[0] = esdmult->GetCentroidX();
+    mult.fCentroidXY[1] = esdmult->GetCentroidY();
+    for (auto layer = 0; layer < 6; ++layer)
+      mult.fITSClusters[layer] = esdmult->GetNumberOfITSClusters(layer);
+    for (auto layer = 0; layer < 2; ++layer)
+      mult.fFiredChips[layer] = esdmult->GetNumberOfFiredChips(layer);
+    FillTree(kMultiplicity);
+    if (fTreeStatus[kMultiplicity]) vtx.fNentries[kMultiplicity] = 1;
+  }
 
   //---------------------------------------------------------------------------
   // V0s (Lambda and KS)

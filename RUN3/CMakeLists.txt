@@ -26,7 +26,7 @@ include_directories(${AliPhysics_SOURCE_DIR}/RUN3
 include_directories(${ROOT_INCLUDE_DIRS})
 
 # Sources in alphabetical order
-set(SRCS AliAnalysisTaskAO2Dconverter.cxx AliAO2DInputHandler.cxx AliAnalysisTaskAO2D.cxx)
+set(SRCS AliAnalysisTaskAO2Dconverter.cxx AliAO2DInputHandler.cxx AliAnalysisTaskAO2D.cxx AliAO2Dtypes.cxx)
 
 # Headers from sources
 string(REPLACE ".cxx" ".h" HDRS "${SRCS}")
