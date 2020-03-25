@@ -56,7 +56,7 @@ set(SRCS
     AliAnalysisTaskLongFluctuations2PC.cxx
     AliAnalysisTaskMinijet.cxx
     AliAnalysisTaskMinijetV2.cxx
-    AliAnalysisTaskMinijetV3.cxx
+  # AliAnalysisTaskMinijetV3.cxx
     AliAnalysisTaskPhiCorrelations.cxx
     AliAnalysisTaskCorrelationsDev.cxx
     AliAnalysisTaskpxpx.cxx

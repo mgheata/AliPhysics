@@ -6,6 +6,7 @@
 #define AliAO2Dtypes_H
 
 #include <Rtypes.h>
+#include <TMath.h>
 #include <TString.h>
 
 namespace AliAO2DTypes {
@@ -125,6 +126,17 @@ struct Track_t {
   Float_t fTRDsignal = -999.f;  /// dE/dX TRD
   Float_t fTOFsignal = -999.f;  /// TOFsignal
   Float_t fLength = -999.f;     /// Int.Lenght @ TOF
+
+  Double_t Pt() const { return TMath::Abs(1./fSigned1Pt); }
+  Double_t Phi() const
+  {
+    Double_t phi=TMath::ASin(fSnp) + fAlpha;
+    if (phi<0.) phi+=2.*TMath::Pi();
+    else if (phi>=2.*TMath::Pi()) phi-=2.*TMath::Pi();
+    return phi;
+  }
+  Double_t Theta() const { return 0.5*TMath::Pi() - TMath::ATan(fTgl); }
+  Double_t Eta() const { return -TMath::Log(TMath::Tan(0.5 * Theta())); }
 };                              //  structure to keep track information
 
 struct MCvtx_t {

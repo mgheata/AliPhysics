@@ -17,6 +17,7 @@ class AliAO2DInputHandler;
 
 #include "AliAnalysisTaskSE.h"
 #include "AliAnalysisUtils.h"
+#include <AliAO2Dtypes.h>
 #include <vector>
 
 class AliAnalysisTaskMinijetV3 : public AliAnalysisTaskSE {
@@ -29,6 +30,9 @@ class AliAnalysisTaskMinijetV3 : public AliAnalysisTaskSE {
   void UserExecAO2D();
   virtual void Terminate(Option_t *);
   virtual void SetCuts(AliESDtrackCuts* cuts){fCuts = cuts;}
+
+  // Method emulating AliESDtrackCuts::AcceptTrack(AliESDtrack*)
+  bool AcceptTrack(AliAO2DTypes::Track_t *track);
   
   void         SetUseMC(Bool_t useMC=kTRUE, Bool_t mcOnly=kFALSE)    {fUseMC = useMC; fMcOnly=mcOnly;}
   void         SetAnalyseOnlyPrimaries(Bool_t analysePrimOnly)       {fAnalysePrimOnly = analysePrimOnly;} // not used anymore

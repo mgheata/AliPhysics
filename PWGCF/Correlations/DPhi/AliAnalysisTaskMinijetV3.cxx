@@ -497,6 +497,23 @@ void AliAnalysisTaskMinijetV3::UserCreateOutputObjects()
 }
 
 //________________________________________________________________________
+bool AliAnalysisTaskMinijetV3::AcceptTrack(AliAO2DTypes::Track_t const &track)
+{
+   ULong64_t status = track.fFlags;
+
+   // missing number of clusters in ITS
+   //Int_t nClustersITS = esdTrack->GetITSclusters(0);
+   
+   Int_t nClustersTPC = track.fTPCncls;
+   // missing
+   // Float_t nCrossedRowsTPC = esdTrack->GetTPCCrossedRows();
+   // Most of the AliESDtrack data used for applying the cuts is not available in AO2D
+   // e.g: number of ITS clusters, number of crossed TPC rows, number of shared clusters, 
+   // impact parameters in XY plane and Z, ...
+   return kTRUE;
+}
+
+//________________________________________________________________________
 void AliAnalysisTaskMinijetV3::UserExecAO2D()
 {
 #ifdef TEST_AO2D
@@ -1061,16 +1078,26 @@ Double_t AliAnalysisTaskMinijetV3::ReadEventESD( vector<Float_t> &ptArray,  vect
     strangeArray.clear();
     nTracksTracklets.clear();
     
+    // Use global vertex instread of SPD vertex (not available)
+    auto event = fAO2Dhandler->CurrentEvent();
+    auto tracks = fAO2Dhandler->GetTracks();
+
+    fVertexZ[step]->Fill(event.fZ);
+
     const AliESDVertex*	vtxSPD   = fESDEvent->GetPrimaryVertexSPD(); // uses track or SPD vertexer
-    fVertexZ[step]->Fill(vtxSPD->GetZ());
     
     // Retreive the number of all tracks for this event.
-    Int_t ntracks = fESDEvent->GetNumberOfTracks();
+    Int_t ntracks = tracks.size();
     if(fDebug>1)  Printf("all ESD tracks: %d", ntracks);
     
     //first loop to check how many tracks are accepted
     //------------------
     Double_t nAcceptedTracks=0;
+
+    for (auto track : tracks) {
+
+    }
+
     //Float_t nAcceptedTracksStrange=0;
     for (Int_t iTracks = 0; iTracks < ntracks; iTracks++) {
         
@@ -2190,153 +2217,50 @@ Bool_t AliAnalysisTaskMinijetV3::CheckEvent(const Bool_t recVertex)
     // recVertex=false: " + check if there is a good, reconstructed SPD vertex
     // defined by |z|<fVertexCut(10cm), Contributer>0, no PileUpFromSPD(3,0,8)
     
+
     if(fMode==0){//esd
         
         //mc
         if(fUseMC){
-            
             //mc event
-            AliMCEvent *mcEvente = (AliMCEvent*) MCEvent();
-            if (!mcEvente) {
+            auto event = fAO2Dhandler->CurrentEvent();           
+            //auto mcVertex = fAO2Dhandler->MCvertex();
+            //auto mcParticles = fAO2Dhandler->GetMCParticles();            
+
+            if (!mcEvent) {
                 Error("CheckEvent", "Could not retrieve MC event");
                 return false;
             }
-            
-            //stack
-            AliStack* stackg = MCEvent()->Stack();
-            if(!stackg) return false;
-            Int_t ntracksg = mcEvente->GetNumberOfTracks();
+
+            Int_t ntracksg = event->fNentries[AliAO2DTypes::kKinematics];
             if(ntracksg<0) return false;
-            
-            //vertex
-            AliGenEventHeader*  headerg = MCEvent()->GenEventHeader();
-            TArrayF mcVg;
-            headerg->PrimaryVertex(mcVg);
-            //if(TMath::Abs(mcVg[0])<1e-8 && TMath::Abs(mcVg[0])<1e-8 &&
-            //   TMath::Abs(mcVg[0])<1e-8) return false;
-            Float_t vzMCg = mcVg[2];
-            if(TMath::Abs(vzMCg)>fVertexZCut) return false;
-            //hasVtxMc=true;
+            //if(TMath::Abs(mcVertex->fZ)>fVertexZCut) return false;           
         }
         
         //rec
         if(recVertex==true){
+            /*
             if (fAnalysisUtils && fAnalysisUtils->IsPileUpMV(fESDEvent)) {
               fEventStat->Fill(9);
               return false;
             }
-            
+            */
             //rec vertex
-            const AliESDVertex*	vertexESDg   = fESDEvent->GetPrimaryVertex(); // uses track or SPD vertexer
-            if(!vertexESDg) return false;
-            fVertexCheck->Fill(vertexESDg->GetNContributors());
-            if(vertexESDg->GetNContributors()<=0)return false;
-            Float_t fVzg= vertexESDg->GetZ();
+            fVertexCheck->Fill(event->fN);
+            if (event->fN <= 0) return kFALSE;
+            Float_t fVzg= event->fZ;
             if(TMath::Abs(fVzg)>fVertexZCut) return false;
-            
-            //rec spd vertex
+
+            //rec spd vertex missing
+            /*
             const AliESDVertex *vtxSPD = fESDEvent->GetPrimaryVertexSPD();
             if(!vtxSPD) return false;
             if(vtxSPD->GetNContributors()<=0)return false;
             Float_t fVzSPD= vtxSPD->GetZ();
             if(TMath::Abs(fVzSPD)>fVertexZCut) return false;
-            
+            */
         }
         return true;
-    }
-    
-    
-    else if(fMode==1){ //aod
-        
-        if(fUseMC){
-            
-            //retreive MC particles from event
-            TClonesArray *mcArray = (TClonesArray*)fAODEvent->
-            FindListObject(AliAODMCParticle::StdBranchName());
-            if(!mcArray){
-                AliInfo("No MC particle branch found");
-                return false;
-            }
-            
-            //mc
-            AliAODMCHeader *aodMCheader = (AliAODMCHeader *) fAODEvent->
-            FindListObject(AliAODMCHeader::StdBranchName());
-            Float_t vzMC = aodMCheader->GetVtxZ();
-            if(TMath::Abs(vzMC)>fVertexZCut) return false;
-            
-            //hasVtxMc=true;
-        }
-        
-        //rec
-        if(recVertex==true){
-            // pile up
-            if (fAnalysisUtils && fAnalysisUtils->IsPileUpMV(fAODEvent)) {
-              fEventStat->Fill(9);
-              return false;
-            }
-            
-            AliAODVertex*	vertex= (AliAODVertex*)fAODEvent->GetPrimaryVertex();
-            if(!vertex) return false;
-            TString vtxTitle(vertex->GetTitle());// only allow vertex from tracks, no vertexer z
-            // Printf("vtxTitle: %s",vtxTitle.Data());
-            //if (!(vtxTitle.Contains("VertexerTracksWithConstraint"))) return false;
-            fVertexCheck->Fill(vertex->GetNContributors());
-            if(vertex->GetNContributors()<=0) return false;
-            Double_t vzAOD=vertex->GetZ();
-            // if(TMath::Abs(vzAOD)<1e-9) return false;
-            if(TMath::Abs(vzAOD)>fVertexZCut) return false;
-            
-            AliAODVertex*	vertexSPD= (AliAODVertex*)fAODEvent->GetPrimaryVertexSPD();
-            if(!vertexSPD) return false;
-            if(vertexSPD->GetNContributors()<=0) return false;
-            Double_t vzSPD=vertexSPD->GetZ();
-            //if(TMath::Abs(vzSPD)<1e-9) return false;
-            if(TMath::Abs(vzSPD)>fVertexZCut) return false;
-            
-            //check TPC reconstruction: check for corrupted chunks
-            //better: check TPCvertex, but this is not available yet in AODs
-            Int_t nAcceptedTracksTPC=0;
-            Int_t nAcceptedTracksITSTPC=0;
-            for (Int_t iTracks = 0; iTracks < fAODEvent->GetNumberOfTracks(); iTracks++) {
-                AliAODTrack *track = dynamic_cast<AliAODTrack*>(fAODEvent->GetTrack(iTracks));
-                if(!track) AliFatal("Not a standard AOD");
-                if (!track) continue;
-                if(track->TestFilterBit(128) && TMath::Abs(track->Eta())<fEtaCut &&
-                   track->Pt()>fPtMin && track->Pt()<fPtMax)
-                    nAcceptedTracksTPC++;
-                if(track->TestFilterBit(fFilterBit) && TMath::Abs(track->Eta())<fEtaCut &&
-                   track->Pt()>fPtMin && track->Pt()<fPtMax)
-                    nAcceptedTracksITSTPC++;
-            }
-            fCorruptedChunks->Fill(nAcceptedTracksTPC,nAcceptedTracksITSTPC);
-            if(fRejectChunks){
-                if(nAcceptedTracksTPC>fNTPC && nAcceptedTracksITSTPC==0)
-                    return false;//most likely corrupted chunk. No ITS tracks are reconstructed
-            }
-            fCorruptedChunksAfter->Fill(nAcceptedTracksTPC,nAcceptedTracksITSTPC);
-            
-            //control histograms=================
-            //tracklet loop
-            Int_t ntrackletsAccept=0;
-            AliAODTracklets * mult= (AliAODTracklets*)fAODEvent->GetTracklets();
-            for(Int_t i=0;i<mult->GetNumberOfTracklets();++i){
-                if(TMath::Abs(mult->GetDeltaPhi(i))<0.05 &&
-                   TMath::Abs(TMath::Log(TMath::Tan(0.5 * mult->GetTheta(i))))<fEtaCut) ++ntrackletsAccept;
-            }
-            Int_t nAcceptedTracks=0;
-            for (Int_t iTracks = 0; iTracks < fAODEvent->GetNumberOfTracks(); iTracks++) {
-                AliAODTrack *track = dynamic_cast<AliAODTrack*>(fAODEvent->GetTrack(iTracks));
-                if(!track) AliFatal("Not a standard AOD");
-                if (!track) continue;
-                if(track->TestFilterBit(fFilterBit) && TMath::Abs(track->Eta())<fEtaCut
-                   && track->Pt()>fPtMin && track->Pt()<fPtMax) nAcceptedTracks++;
-            }
-            fNContrNtracklets->Fill(ntrackletsAccept,vertexSPD->GetNContributors());
-            fNContrNtracks->Fill(nAcceptedTracks,vertexSPD->GetNContributors());
-            //====================================
-        }
-        return true;
-        
     }
     
     else {

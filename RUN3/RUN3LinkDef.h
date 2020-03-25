@@ -5,4 +5,5 @@
 #pragma link C++ class AliAnalysisTaskAO2Dconverter+;
 #pragma link C++ class AliAO2DInputHandler+;
 #pragma link C++ class AliAnalysisTaskAO2D+;
+#pragma link C++ class AliExFlowTask+;
 #endif
