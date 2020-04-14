@@ -139,6 +139,23 @@ private:
     Float_t  fChi2;             /// Chi2 of the vertex
     UInt_t   fN;                /// Number of contributors
 
+    // ITS vertex
+    Float_t  fX_SPD = -999.f;       /// Primary vertex x coordinate
+    Float_t  fY_SPD = -999.f;       /// Primary vertex y coordinate
+    Float_t  fZ_SPD = -999.f;       /// Primary vertex z coordinate
+    // Primary vertex covariance matrix
+    Float_t  fCovXX_SPD = 999.f;    /// cov[0]
+    Float_t  fCovXY_SPD = 0.f;      /// cov[1]
+    Float_t  fCovXZ_SPD = 0.f;      /// cov[2]
+    Float_t  fCovYY_SPD = 999.f;    /// cov[3]
+    Float_t  fCovYZ_SPD = 0.f;      /// cov[4]
+    Float_t  fCovZZ_SPD = 999.f;    /// cov[5]
+    // Quality parameters
+    Float_t  fChi2_SPD;             /// Chi2 of the vertex
+    UInt_t   fN_SPD;                /// Number of contributors
+
+    Float_t  fV0centr = 0;          /// V0 centrality percentile 
+
     // The calculation of event time certainly will be modified in Run3
     // The prototype below can be switched on request
     Float_t fCollisionTime = -999.f;    /// Event time (t0) obtained with different methods (best, T0, T0-TOF, ...)

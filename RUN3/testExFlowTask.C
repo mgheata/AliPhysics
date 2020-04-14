@@ -7,14 +7,35 @@ R__ADD_INCLUDE_PATH($ALICE_PHYSICS)
 TChain* CreateChain(const char *xmlfile, const char *type="O2events");
 TChain *CreateLocalChain(const char *txtfile, const char *type, int nfiles);
 
-void testExFlowTask()
+void testExFlowTask(int type = 1)
 {
-   const char *anatype = "O2events";
+   if (type < 0 || type > 2) {
+     printf("Error: supported types are: 0=ESD 1=AOD 2=AO2D\n");
+     return;
+   }
+   const char *anatype[3] = {"esdEvent", "aodEvent", "O2events"};
 
  //  TGrid::Connect("alien:");
 
    AliAnalysisManager *mgr = new AliAnalysisManager("test_ExFlow");
-   AliAO2DInputHandler *handler = new AliAO2DInputHandler();
+   AliInputEventHandler *handler = nullptr;
+   TChain *chain = nullptr;
+   switch (type) {
+     case 0:
+       handler = new AliESDInputHandler();
+       chain = CreateLocalChain("wn.txt", "esdTree", 10);
+       break;
+     case 1:
+       handler = new AliAODInputHandler();
+       chain = CreateLocalChain("wnaod.txt", "aodTree", 10);
+       break;
+     case 2:
+       handler = new AliAO2DInputHandler();
+       chain = CreateLocalChain("wnao2d.txt", "O2events", 10);
+       break;
+   };
+   if (!chain) return;
+   
    mgr->SetInputEventHandler(handler);
       
    auto taskFlow1 = AddTaskExFlow(768, 0.8, 10.0, 0.2, 50.0, 70, 2., 0.5, "v2_def_gap1");
@@ -24,11 +45,6 @@ void testExFlowTask()
    
    if (!mgr->InitAnalysis()) return;
    mgr->PrintStatus();
-
-   // Create the chain based on xml collection or txt file
-   // The entries in the txt file can be local paths or alien paths
-   TChain *chain = CreateLocalChain("wnao2d.txt", anatype, 1);
-   if (!chain) return;
 
    mgr->SetDebugLevel(1);
    mgr->StartAnalysis("localfile", chain, 123456789, 0);

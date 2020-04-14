@@ -27,6 +27,7 @@ enum TreeIndex { // Index of the output trees
    kMCvtx,
    kRange,
    kLabels,
+   kTrigger,
    kCentrality,
    kMultiplicity,
    kTrees
@@ -34,7 +35,7 @@ enum TreeIndex { // Index of the output trees
 
 const TString kTreeName[kTrees] = { "O2events", "O2tracks", "O2calo",  "O2caloTrigger", "O2muon", "O2muoncls",
                                     "O2zdc", "O2vzero", "O2v0s", "O2cascades", "O2tof", "O2kine", "O2mcvtx",
-                                    "O2range", "O2labels", "O2centrality", "O2multiplicity" };
+                                    "O2range", "O2labels", "O2trigger", "O2centrality", "O2multiplicity" };
 
 struct Vertex_t {
    // Start indices and numbers of elements for data in the other trees matching this vertex.
@@ -43,7 +44,7 @@ struct Vertex_t {
    Int_t     fNentries[kTrees] = {0}; /// Numbers of entries for data in the other trees matching this vertex
    // Event data
    Int_t     fRunNumber;       /// Run Number (added in case of multirun skimming)
-   ULong64_t fEventId = 0u;    /// Event (collision) unique id. Contains period, orbit and bunch crossing numbers
+   ULong64_t fGlobalBC = 0u;    /// Event (collision) unique id. Contains period, orbit and bunch crossing numbers
    // Primary vertex position
    Float_t  fX = -999.f;       /// Primary vertex x coordinate
    Float_t  fY = -999.f;       /// Primary vertex y coordinate
@@ -59,11 +60,28 @@ struct Vertex_t {
    Float_t  fChi2;             /// Chi2 of the vertex
    UInt_t   fN;                /// Number of contributors
 
+    // ITS vertex
+    Float_t  fX_SPD = -999.f;       /// Primary vertex x coordinate
+    Float_t  fY_SPD = -999.f;       /// Primary vertex y coordinate
+    Float_t  fZ_SPD = -999.f;       /// Primary vertex z coordinate
+    // Primary vertex covariance matrix
+    Float_t  fCovXX_SPD = 999.f;    /// cov[0]
+    Float_t  fCovXY_SPD = 0.f;      /// cov[1]
+    Float_t  fCovXZ_SPD = 0.f;      /// cov[2]
+    Float_t  fCovYY_SPD = 999.f;    /// cov[3]
+    Float_t  fCovYZ_SPD = 0.f;      /// cov[4]
+    Float_t  fCovZZ_SPD = 999.f;    /// cov[5]
+    // Quality parameters
+    Float_t  fChi2_SPD;             /// Chi2 of the vertex
+    UInt_t   fN_SPD;                /// Number of contributors
+
+    Float_t  fV0centr = 0;          /// V0 centrality percentile 
+
    // The calculation of event time certainly will be modified in Run3
    // The prototype below can be switched on request
-   Float_t fEventTime = -999.f;    /// Event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
-   Float_t fEventTimeRes = -999.f; /// Resolution on the event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
-   UChar_t fEventTimeMask = 0u;    /// Mask with the method used to compute the event time (0x1=T0-TOF,0x2=T0A,0x3=TOC) for each momentum bins  
+   Float_t fCollisionTime = -999.f;    /// Event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
+   Float_t fCollisionTimeRes = -999.f; /// Resolution on the event time (t0) obtained with different methods (best, T0, T0-TOF, ...)
+   UChar_t fCollisionTimeMask = 0u;    /// Mask with the method used to compute the event time (0x1=T0-TOF,0x2=T0A,0x3=TOC) for each momentum bins
 };
 
 using Event_t = Vertex_t;
@@ -111,9 +129,12 @@ struct Track_t {
   ULong64_t fFlags = 0u;        /// Reconstruction status flags
 
   // Clusters
-  UChar_t fITSClusterMap = 0u;  /// ITS map of clusters, one bit per a layer
-  UShort_t fTPCncls = 0u;       /// number of clusters assigned in the TPC
-  UChar_t fTRDntracklets = 0u;  /// number of TRD tracklets used for tracking/PID (TRD/TOF pattern)
+  UChar_t fITSClusterMap = 0u;   /// ITS map of clusters, one bit per a layer
+  UChar_t fTPCnclsFindable = 0u; /// number of clusters that could be assigned in the TPC
+  Char_t fTPCnclsFindableMinusFound = 0;       /// difference between foundable and found clusters
+  Char_t fTPCnclsFindableMinusCrossedRows = 0; ///  difference between foundable clsuters and crossed rows
+  UChar_t fTPCnclsShared = 0u;   /// Number of shared clusters
+  UChar_t fTRDntracklets = 0u;   /// number of TRD tracklets used for tracking/PID (TRD/TOF pattern)
 
   // Chi2
   Float_t fITSchi2Ncl = -999.f; /// chi2/Ncl ITS

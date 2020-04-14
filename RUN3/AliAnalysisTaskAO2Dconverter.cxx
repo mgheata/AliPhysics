@@ -46,6 +46,7 @@
 #include "AliPIDResponse.h"
 #include "AliCentrality.h"
 #include "AliMultiplicity.h"
+#include "COMMON/MULTIPLICITY/AliMultSelection.h"
 
 #include "AliGenCocktailEventHeader.h"
 #include "AliGenDPMjetEventHeader.h"
@@ -171,6 +172,18 @@ void AliAnalysisTaskAO2Dconverter::UserCreateOutputObjects()
     tEvents->Branch("fCovZZ", &vtx.fCovZZ, "fCovZZ/F");
     tEvents->Branch("fChi2", &vtx.fChi2, "fChi2/F");
     tEvents->Branch("fN", &vtx.fN, "fN/i");
+    tEvents->Branch("fX_SPD", &vtx.fX, "fX/F");
+    tEvents->Branch("fY_SPD", &vtx.fY, "fY/F");
+    tEvents->Branch("fZ_SPD", &vtx.fZ, "fZ/F");
+    tEvents->Branch("fCovXX_SPD", &vtx.fCovXX, "fCovXX/F");
+    tEvents->Branch("fCovXY_SPD", &vtx.fCovXY, "fCovXY/F");
+    tEvents->Branch("fCovXZ_SPD", &vtx.fCovXZ, "fCovXZ/F");
+    tEvents->Branch("fCovYY_SPD", &vtx.fCovYY, "fCovYY/F");
+    tEvents->Branch("fCovYZ_SPD", &vtx.fCovYZ, "fCovYZ/F");
+    tEvents->Branch("fCovZZ_SPD", &vtx.fCovZZ, "fCovZZ/F");
+    tEvents->Branch("fChi2_SPD", &vtx.fChi2, "fChi2/F");
+    tEvents->Branch("fN_SPD", &vtx.fN, "fN/i");
+    tEvents->Branch("fV0centr", &vtx.fV0centr, "fV0centr/F");
     tEvents->Branch("fCollisionTime", &vtx.fCollisionTime, "fCollisionTime/F");
     tEvents->Branch("fCollisionTimeRes", &vtx.fCollisionTimeRes, "fCollisionTimeRes/F");
     tEvents->Branch("fCollisionTimeMask", &vtx.fCollisionTimeMask, "fCollisionTimeMask/b");
@@ -548,7 +561,8 @@ void AliAnalysisTaskAO2Dconverter::UserExec(Option_t *)
   }
   // const AliVVertex *pvtx = fEventCuts.GetPrimaryVertex();
   const AliESDVertex * pvtx = fESD->GetPrimaryVertex();
-  if (!pvtx) {
+  const AliESDVertex * pvtx_spd = fESD->GetPrimaryVertexSPD();
+  if (!pvtx || !pvtx_spd) {
     ::Fatal("AliAnalysisTaskAO2Dconverter::UserExec", "Vertex not defined");
   }
   TString title=pvtx->GetTitle();
@@ -585,6 +599,27 @@ void AliAnalysisTaskAO2Dconverter::UserExec(Option_t *)
 
   vtx.fChi2 = pvtx->GetChi2();
   vtx.fN = (pvtx->GetNDF()+3)/2;
+
+  vtx.fX_SPD = pvtx_spd->GetX();
+  vtx.fY_SPD = pvtx_spd->GetY();
+  vtx.fZ_SPD = pvtx_spd->GetZ();
+
+  Double_t covmatrix_spd[6];
+  pvtx_spd->GetCovMatrix(covmatrix);
+
+  vtx.fCovXX_SPD = covmatrix[0];
+  vtx.fCovXY_SPD = covmatrix[1];
+  vtx.fCovXZ_SPD = covmatrix[2];
+  vtx.fCovYY_SPD = covmatrix[3];
+  vtx.fCovYZ_SPD = covmatrix[4];
+  vtx.fCovZZ_SPD = covmatrix[5];
+
+  vtx.fChi2_SPD = pvtx_spd->GetChi2();
+  vtx.fN_SPD = (pvtx_spd->GetNDF()+3)/2;
+
+  // If multiplicity selection task was used, add info in the event
+  AliMultSelection* multSelection = (AliMultSelection*) fESD->FindListObject("MultSelection");
+  vtx.fV0centr = multSelection->GetMultiplicityPercentile("V0M");
 
   Float_t eventTime[10];
   Float_t eventTimeRes[10];

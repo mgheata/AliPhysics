@@ -12,6 +12,7 @@
 
 // AliRoot includes
 #include <AliAnalysisTaskSE.h>
+#include <AliESDEvent.h>
 #include <AliAODEvent.h>
 #include <AliVHeader.h>
 #include <AliVVertex.h>
@@ -30,6 +31,9 @@ class AliExFlowTask : public AliAnalysisTaskSE {
 
   virtual void   UserCreateOutputObjects();
   virtual void   UserExec(Option_t *option);
+  void   UserExecESD(Option_t *option);
+  void   UserExecAOD(Option_t *option);
+  void   UserExecAO2D(Option_t *option);
   virtual void   Terminate(Option_t *); 
 
   
@@ -47,16 +51,20 @@ class AliExFlowTask : public AliAnalysisTaskSE {
     virtual void  SetNHarmonic(Double_t nHarm){fNHarm = nHarm;}
     virtual void  SetEtaGap(Float_t etaGap){fEtaGap = etaGap;}
 
-    
-  
  private:
-    virtual Float_t GetVertex(AliAO2DTypes::Vertex_t *vtx) const;
-    virtual void Analyze(AliAO2DTypes::Vertex_t *vtx, Float_t vtxZ);
+    Float_t GetVertex(AliESDEvent* esd) const;
+    Float_t GetVertex(AliAODEvent* aod) const;
+    Float_t GetVertex(AliAO2DTypes::Vertex_t *vtx) const;
+
+    void Analyze(AliESDEvent* esd, Float_t vtxZ);
+    void Analyze(AliAODEvent* aod, Float_t vtxZ);
+    void Analyze(AliAO2DTypes::Vertex_t *vtx, Float_t vtxZ);
 
 
+    Int_t        fIev = 0;       // event number
     AliAO2DInputHandler *fAO2Dhandler = nullptr; // AO2D input handler
-    AliAODEvent* fAOD;                //! AOD object
-
+    AliAODEvent* fAOD = nullptr;                //! AOD object
+    AliESDEvent* fESD = nullptr;
     
     // Cuts and options
     Double_t     fVtxCut;             // Vtx cut on z position in cm
