@@ -676,6 +676,7 @@ void AliAnalysisTaskAO2Dconverter::UserExec(Option_t *)
     if(pvtx->GetNContributors()<2) return;
   }
   Int_t eventID = fEventCount++;
+  printf("== vertex %d having %d contributors, %d ntracks\n", eventID, pvtx->GetNContributors(), fESD->GetNumberOfTracks());
 
   // Fill centrality QA plots
   fCentralityHist->Fill(centrality);
@@ -778,6 +779,7 @@ void AliAnalysisTaskAO2Dconverter::UserExec(Option_t *)
   for (Int_t itrk = 0; itrk < ntrk; itrk++)
   {
     AliESDtrack *track = fESD->GetTrack(itrk);
+    printf("  %d: mom=%g\n", itrk, track->P());
 //    if (!fTrackFilter.IsSelected(track))
 //      continue;
 

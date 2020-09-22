@@ -40,6 +40,7 @@
 #include "AliAODVZERO.h"
 #include "AliAODv0.h"
 #include "AliAODcascade.h"
+#include "AliAODMCParticle.h"
 
 #include "AliMCEvent.h"
 #include "AliMCEventHandler.h"
@@ -636,8 +637,9 @@ void AliAnalysisTaskAOD_AO2Dconverter::UserExec(Option_t *)
     return;
   }
 
+  AliAODInputHandler *aodH = dynamic_cast<AliAODInputHandler*>(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler());
   // Configuration of the PID response
-  AliPIDResponse* PIDResponse = (AliPIDResponse*)((AliInputEventHandler*)(AliAnalysisManager::GetAnalysisManager()->GetInputEventHandler()))->GetPIDResponse();
+  AliPIDResponse* PIDResponse = (AliPIDResponse*)aodH->GetPIDResponse();
   PIDResponse->SetTOFResponse(fAOD, AliPIDResponse::kBest_T0);
   AliTOFPIDResponse & TOFResponse = PIDResponse->GetTOFResponse();
 
@@ -652,11 +654,11 @@ void AliAnalysisTaskAOD_AO2Dconverter::UserExec(Option_t *)
   // Configuration of the MC event (if needed)
   AliMCEvent* MCEvt = nullptr;
   if (fTaskMode == kMC) {
-    AliMCEventHandler* eventHandler = dynamic_cast<AliMCEventHandler*>(AliAnalysisManager::GetAnalysisManager()->GetMCtruthEventHandler()); //Get the MC handler
+    //AliMCEventHandler* eventHandler = dynamic_cast<AliMCEventHandler*>(AliAnalysisManager::GetAnalysisManager()->GetMCtruthEventHandler()); //Get the MC handler
 
-    if (!eventHandler) //Check on the MC handler
-      AliFatal("Could not retrieve MC event handler");
-    MCEvt = eventHandler->MCEvent(); //Get the MC Event
+    //if (!eventHandler) //Check on the MC handler
+    //  AliFatal("Could not retrieve MC event handler");
+    MCEvt = aodH->MCEvent(); //Get the MC Event
 
     if (!MCEvt) // Check on the MC Event
       AliFatal("Could not retrieve MC event");
@@ -678,6 +680,7 @@ void AliAnalysisTaskAOD_AO2Dconverter::UserExec(Option_t *)
     if(pvtx->GetNContributors()<2) return;
   }
   Int_t eventID = fEventCount++;
+  printf("== vertex %d having %d contributors, %d ntracks\n", eventID, pvtx->GetNContributors(), fAOD->GetNumberOfTracks());
 
   // Fill centrality QA plots
   fCentralityHist->Fill(centrality);
@@ -780,8 +783,10 @@ void AliAnalysisTaskAOD_AO2Dconverter::UserExec(Option_t *)
   for (Int_t itrk = 0; itrk < ntrk; itrk++)
   {
     AliAODTrack *track = (AliAODTrack*)fAOD->GetTrack(itrk);
+    printf("  %d: mom=%g\n", itrk, track->P());
 //    if (!fTrackFilter.IsSelected(track))
 //      continue;
+    // For AOD we retrieve the covariance matrix elements separatele, there are no getters for individual ones
     Double_t cv[21], position[3];
 
     track->GetCovarianceXYZPxPyPz(cv);
@@ -1334,37 +1339,39 @@ void AliAnalysisTaskAOD_AO2Dconverter::UserExec(Option_t *)
   Int_t nkine_filled = 0; // Number of kine tracks filled
   if (MCEvt) {
     // Kinematics
-    TParticle* particle = nullptr;
+    //TParticle* particle = nullptr;
     Int_t nMCtracks = MCEvt->GetNumberOfTracks();
     for (Int_t i = 0; i < nMCtracks; ++i) { //loop on primary MC tracks Before Event Selection
-      AliVParticle* vpt = MCEvt->GetTrack(i);
-      particle = vpt->Particle();
+      AliAODMCParticle *particle  = (AliAODMCParticle*)MCEvt->GetTrack(i);
+      //particle = vpt->Particle();
 
       mcparticle.fMcCollisionsID = eventID;
       
       //Get the kinematic values of the particles
       mcparticle.fPdgCode = particle->GetPdgCode();
-      mcparticle.fStatusCode = particle->GetStatusCode();
+      mcparticle.fStatusCode = particle->GetStatus();
       mcparticle.fFlags = 0;
-      if (i >= MCEvt->Stack()->GetNprimary())
+      //if (i >= MCEvt->Stack()->GetNprimary())
+      if (!particle->IsPrimary())
         mcparticle.fFlags |= MCParticleFlags::ProducedInTransport;
-      mcparticle.fMother0 = vpt->GetMother();
+      mcparticle.fMother0 = particle->GetMother();
       if (mcparticle.fMother0 > -1) mcparticle.fMother0+=fOffsetLabel;
       mcparticle.fMother1 = -1;
-      mcparticle.fDaughter0 = particle->GetFirstDaughter();
+      mcparticle.fDaughter0 = particle->GetDaughterFirst();
       if (mcparticle.fDaughter0 > -1) mcparticle.fDaughter0+=fOffsetLabel;
-      mcparticle.fDaughter1 = particle->GetLastDaughter();
+      mcparticle.fDaughter1 = particle->GetDaughterLast();
       if (mcparticle.fDaughter1 > -1) mcparticle.fDaughter1+=fOffsetLabel;
-      mcparticle.fWeight = AliMathBase::TruncateFloatFraction(particle->GetWeight(), mMcParticleW);
+      // No GetWeight() in AliAODMCParticle
+      mcparticle.fWeight = AliMathBase::TruncateFloatFraction(1 /*particle->GetWeight()*/, mMcParticleW);
 
       mcparticle.fPx = AliMathBase::TruncateFloatFraction(particle->Px(), mMcParticleMom);
       mcparticle.fPy = AliMathBase::TruncateFloatFraction(particle->Py(), mMcParticleMom);
       mcparticle.fPz = AliMathBase::TruncateFloatFraction(particle->Pz(), mMcParticleMom);
-      mcparticle.fE  = AliMathBase::TruncateFloatFraction(particle->Energy(), mMcParticleMom);
+      mcparticle.fE  = AliMathBase::TruncateFloatFraction(particle->E(), mMcParticleMom);
 
-      mcparticle.fVx = AliMathBase::TruncateFloatFraction(particle->Vx(), mMcParticlePos);
-      mcparticle.fVy = AliMathBase::TruncateFloatFraction(particle->Vy(), mMcParticlePos);
-      mcparticle.fVz = AliMathBase::TruncateFloatFraction(particle->Vz(), mMcParticlePos);
+      mcparticle.fVx = AliMathBase::TruncateFloatFraction(particle->Xv(), mMcParticlePos);
+      mcparticle.fVy = AliMathBase::TruncateFloatFraction(particle->Yv(), mMcParticlePos);
+      mcparticle.fVz = AliMathBase::TruncateFloatFraction(particle->Zv(), mMcParticlePos);
       mcparticle.fVt = AliMathBase::TruncateFloatFraction(particle->T(), mMcParticlePos);
 
       FillTree(kMcParticle);
